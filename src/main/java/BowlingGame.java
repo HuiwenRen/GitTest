@@ -1,6 +1,3 @@
-import java.util.ArrayList;
-import java.util.List;
-
 public class BowlingGame {
 
     private final static int GAME_ROUND = 10;
@@ -8,81 +5,48 @@ public class BowlingGame {
     private final static char STRIKE = 'X';
     private final static char SPARE = '/';
     private final static char MISS = '-';
-    private final static String BOUNDARY_NORMAL = "\\|";
-    private final static String BOUNDARY_EXTRA = "\\|\\|";
+    private final static char BOUNDARY = '|';
 
-    List<Grid> gridList = new ArrayList<Grid>();
-
-    class Grid {
-        boolean isExtra;
-        int left;
-        int getGoal;
-        int crack;
-        List<Integer> shot;
-
-        Grid(String code, boolean isExtra) {
-            this.isExtra = isExtra;
-            crack = 1;
-            getGoal = 0;
-            left = BOWLING_NUM;
-            shot = new ArrayList<Integer>();
-            for (int i = 0; i < code.length(); i++) {
-                shot.add(getGoal(left, code.charAt(i)));
-                if(!isExtra){
-                    int cra = 1;
-                    left -= shot.get(i);
-                    if (left == 0) {
-                        cra += 1;
-                    }
-                    if (shot.get(i) == BOWLING_NUM) {
-                        cra += 1;
-                    }
-                    getGoal = cra > 1 ? 10 : getGoal + shot.get(i) * crack;
-                    crack = cra;
-                }
-            }
-        }
-    }
-
-    private void initGridList(String bowlingCode) {
-        String[] bowlingGrid = bowlingCode.split(BOUNDARY_EXTRA);
-        String[] normalBowlingGrid = bowlingGrid[0].split(BOUNDARY_NORMAL);
-        boolean extraRound = bowlingGrid.length > 1;
-        for (int i = 0; i < GAME_ROUND; i++) {
-            gridList.add(new Grid(normalBowlingGrid[i], false));
-        }
-        if (extraRound) {
-            gridList.add(new Grid(bowlingGrid[1], true));
-        }
-    }
+    boolean extra = false;
+    int left = BOWLING_NUM;
+    int cru = 1;
+    int cru2 = 1;
 
     public int getBowlingScore(String bowlingCode) {
         int sumGoal = 0;
-        int fCrack = 0;
-        int sCrack = 0;
-        initGridList(bowlingCode);
-        for (Grid grid : gridList) {
-            sumGoal += grid.getGoal;
-            sumGoal += grid.shot.get(0) * fCrack;
-            if(sCrack != 0 && grid.shot.size()>1){
-                sumGoal += grid.shot.get(1) * sCrack;
-                sCrack = 0;
+        for (int i = 0; i < bowlingCode.length(); i++) {
+            int k = bowlingCode.charAt(i) - '0';
+            if (extra) {
+                cru -= 1;
             }
-            fCrack = grid.crack > 1 ? sCrack + 1 : sCrack;
-            sCrack = grid.crack > 2 ? 1 : 0;
+            switch (bowlingCode.charAt(i)) {
+                case BOUNDARY:
+                    if (bowlingCode.charAt(i - 1) == BOUNDARY)
+                        extra = true;
+                    left = BOWLING_NUM;
+                    break;
+                case STRIKE:
+                    sumGoal += BOWLING_NUM * cru;
+                    chCru(1, 1);
+                    break;
+                case SPARE:
+                    sumGoal += left * cru;
+                    chCru(1, 0);
+                    break;
+                case MISS:
+                    chCru(0, 0);
+                    break;
+                default:
+                    left -= k;
+                    sumGoal += k * cru;
+                    chCru(0, 0);
+            }
         }
         return sumGoal;
     }
 
-    private static int getGoal(int left, char sym) {
-        switch (sym) {
-            case MISS:
-                return 0;
-            case STRIKE:
-            case SPARE:
-                return left;
-            default:
-                return sym - '0';
-        }
+    private void chCru(int n1, int n2) {
+        cru = extra ? cru2 : cru2 + n1;
+        cru2 = extra ? 0 : n2 + 1;
     }
 }
